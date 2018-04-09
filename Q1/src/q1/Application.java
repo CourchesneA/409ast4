@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Note: Character will always try diagonal movement first since it is better for them. If they cant, they'll skip. 
@@ -13,11 +12,11 @@ import java.util.concurrent.TimeUnit;
  *
  */
 public class Application {
-	static final int size = 10;
-	static final long runTime = 2500;
+	static final int size = 30;
+	static final long runTime = 120000;
 	
 	static int n,p,r,k;
-	static Tile[][] grid = new Tile[30][30];
+	static Tile[][] grid = new Tile[size][size];
 	static Random rnd = new Random();
 	static List<Character> chars = new ArrayList<Character>(n);
 
@@ -39,8 +38,8 @@ public class Application {
 		assert(r >= 0);
 		assert(k > 0);
 		initGrid();
-		System.out.println("Initial grid setup:");
-		printGrid();
+		//System.out.println("Initial grid setup:");
+		//printGrid();
 		
 		ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(p);
 		
@@ -51,15 +50,22 @@ public class Application {
 		//for(int i=0; i<n; i++) {  //For testing
 			threadPoolExecutor.execute(new Mover(chars.get(i)));
 		}
+		System.out.println("Current time: "+System.currentTimeMillis());
+		System.out.println("Start time: "+t1);
+		System.out.println("Diff: "+(System.currentTimeMillis()-t1));
 
+		/*for(int i =0; i< chars.size(); i++) {
+			threadPoolExecutor.execute(new Printer(chars.get(i)));
+		}*/
 		threadPoolExecutor.shutdown();
 		for(int i=0;i<chars.size(); i++) {
 			chars.get(i).printMoveCount();
 		}
 		
-		System.out.println();
-		System.out.println("Final grid setup:");
-		printGrid();
+		//System.out.println();
+		//System.out.println("Final grid setup:");
+		//printGrid();
+		System.exit(0);
 	}
 	
 	public static void initGrid() {
@@ -115,16 +121,33 @@ public class Application {
 		System.out.println();
 		System.out.println();
 	}
+	
+	static Tile getTile(Vector2D v) {
+		return grid[v.x][v.y];
+	}
 }
 
 class Mover implements Runnable{
-	private Character c=null;
+	Character c=null;
 	@Override
 	public void run() {
 		c.move();
 	}
 	
 	public Mover(Character c) {
+		this.c = c;
+	}
+	
+}
+
+class Printer implements Runnable{
+	Character c=null;
+	@Override
+	public void run() {
+		c.printMoveCount();
+	}
+	
+	public Printer(Character c) {
 		this.c = c;
 	}
 	

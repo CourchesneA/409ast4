@@ -22,21 +22,29 @@ public class Character extends Occupant{
 			setNewDestination();
 		}
 		Vector2D nextPosition = getNextPosition();
-		Tile nextTile = Application.grid[nextPosition.x][nextPosition.y];
-		Tile currentTile = Application.grid[position.x][position.y];
+		Tile nextTile = Application.getTile(nextPosition);
+		Tile currentTile = Application.getTile(position);
+		
+		
+		synchronized(getFirst(nextPosition, position)) {	//Lock both current position and next position according to an evaluation function (Same for everyone) -> solution to the dining philosophers
+			synchronized(getSecond(nextPosition, position)) {
+				//We have the lock, we will try to move to this tile and set our old tile to empty
+				try {
+					nextTile.setOccupant(this);
+					position = nextPosition;
+					currentTile.clear();	//This should not be a problem since no one will lock/modify a tile that is not empty
+					moveCount++;
+				} catch (Exception e) {
+					//We were not able to move, unlock tile and cancel current destination
+					//e.printStackTrace();
+					destination = null;
+				}
+				//System.out.println(Thread.currentThread().getName());
+				//Application.printGrid();
 
-		synchronized(nextTile) {
-			//We have the lock, we will try to move to this tile and set our old tile to empty
-			try {
-				nextTile.setOccupant(this);
-				currentTile.clear();	//This should not be a problem since no one will lock/modify a tile that is not empty
-				moveCount++;
-			} catch (Exception e) {
-				//We were not able to move, unlock tile and cancel current destination
-				//e.printStackTrace();
-				destination = null;
 			}
 		}
+		
 		//Here they may or may not have moved but in both case they need to wait the same amount
 		try {
 			Thread.sleep(speed*Application.k);
@@ -56,10 +64,11 @@ public class Character extends Occupant{
 		while(ans == null) {
 			try {
 				int minx = Math.max(0, position.x-8);
-				int maxx = Math.min(Application.size, position.x+8);
+				int maxx = Math.min(Application.size-1, position.x+8);
 				int miny = Math.max(0, position.y-8);
-				int maxy = Math.min(Application.size, position.y+8);
-				ans = new Vector2D(Application.rnd.nextInt(maxx)+minx,Application.rnd.nextInt(maxy)+miny);
+				int maxy = Math.min(Application.size-1, position.y+8);
+				ans = new Vector2D(Application.rnd.nextInt(maxx-minx)+minx,Application.rnd.nextInt(maxy-miny)+miny);
+				assert(ans.x < 30 || ans.y < 30);
 			}catch(Exception e) { }
 		}
 		destination = ans;
@@ -92,6 +101,24 @@ public class Character extends Occupant{
 	@Override
 	public String toString() {
 		return "player-"+id;
+	}
+	
+	//Order the locks
+	
+	
+	private Tile getFirst(Vector2D p1, Vector2D p2) {
+		if(p1.x < p2.x ) return Application.grid[p1.x][p1.y];
+		if(p1.x == p2.x) {
+			if(p1.y < p2.y) return Application.grid[p1.x][p1.y];
+		}
+		return Application.grid[p2.x][p2.y];
+	}
+	private Tile getSecond(Vector2D p1, Vector2D p2) {
+		if(p1.x < p2.x ) return Application.grid[p2.x][p2.y];
+		if(p1.x == p2.x) {
+			if(p1.y < p2.y) return Application.grid[p2.x][p2.y];
+		}
+		return Application.grid[p1.x][p1.y];
 	}
 
 }

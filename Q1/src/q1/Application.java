@@ -19,6 +19,7 @@ public class Application {
 	static Tile[][] grid = new Tile[size][size];
 	static Random rnd = new Random();
 	static List<Character> chars = new ArrayList<Character>(n);
+	static ExecutorService threadPoolExecutor;
 
 	public static void main(String[] args) {
 		if (args.length<3) {
@@ -41,15 +42,25 @@ public class Application {
 		//System.out.println("Initial grid setup:");
 		//printGrid();
 		
-		ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(p);
+		threadPoolExecutor = Executors.newFixedThreadPool(p);
 		
 		long simDuration = runTime;
 		long t1 = System.currentTimeMillis();
 		
-		for(int i = 0; System.currentTimeMillis()-t1 < simDuration; i++, i=(i==n)?0:i) {	//Loops that cycle through the characters id
-		//for(int i=0; i<n; i++) {  //For testing
+		/*for(int i = 0; System.currentTimeMillis()-t1 < simDuration; i++, i=(i==n)?0:i) {	//Loops that cycle through the characters id
+			threadPoolExecutor.execute(new Mover(chars.get(i)));
+		}*/
+		
+		for(int i=0; i<n; i++) {  //For testing
 			threadPoolExecutor.execute(new Mover(chars.get(i)));
 		}
+		
+		while(System.currentTimeMillis()-t1 < simDuration) {
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {}
+		}
+		
 		System.out.println("Current time: "+System.currentTimeMillis());
 		System.out.println("Start time: "+t1);
 		System.out.println("Diff: "+(System.currentTimeMillis()-t1));
@@ -127,11 +138,19 @@ public class Application {
 	}
 }
 
+/**
+ * we submit a new task for this character only if it is done moving
+ * This was implemented to see different time for each character -> for different speed
+ * otherwise each character war getting about the same number of move total
+ * @author Anthony
+ *
+ */
 class Mover implements Runnable{
 	Character c=null;
 	@Override
 	public void run() {
 		c.move();
+		Application.threadPoolExecutor.submit(this);
 	}
 	
 	public Mover(Character c) {

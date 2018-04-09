@@ -13,4 +13,10 @@ public class Vector2D implements Cloneable{
 	public Object clone() {
 		return new Vector2D(x,y);
 	}
+	
+	@Override
+	public boolean equals(Object other) {
+		Vector2D o = (Vector2D) other;
+		return (x==o.x && y==o.y);
+	}
 }

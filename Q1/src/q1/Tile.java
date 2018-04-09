@@ -11,8 +11,15 @@ public class Tile{
 		if(this.occupant == null) {
 			this.occupant = occupant;
 		}else {
-			throw new Exception("Tile occupied by "+occupant);
+			throw new Exception("Tile occupied by "+this.occupant);
 		}
+	}
+	
+	/**
+	 * Remove the current occupant of this tile
+	 */
+	public void clear() {
+		this.occupant = null;
 	}
 	
 	public boolean isOccupied() {

@@ -1,3 +1,4 @@
+#include <omp.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -7,7 +8,8 @@
 /* Number of characters in the alphabet */
 #define ALPHABETSIZE 4
 /* Size of the string to match against.  You may need to adjust this. */
-#define STRINGSIZE 100000000
+//#define STRINGSIZE 100000000
+#define STRINGSIZE 100
 
 /* State transition table (ie the DFA) */
 int stateTable[MAXSTATES][ALPHABETSIZE];
@@ -52,7 +54,6 @@ void initTable() {
 /* Construct a sample string to match against.  Note that this uses characters, encoded in ASCII,
    so to get 0-based characters you'd need to subtract 'a'. */
 char *buildString() {
-    int i;
     char *s = (char *)malloc(sizeof(char)*(STRINGSIZE));
     if (s==NULL) {
         printf("\nOut of memory!\n");
@@ -87,8 +88,7 @@ char *buildString() {
 /**Given a string and an initial state, output ending state**/
 int processPart(char *strPart,int initialState){
 		int currentState = initialState;
-		int i;
-		for (i = 0; i < strlen(strPart); i++){
+		for (int i = 0; i < strlen(strPart); i++){
 				if(currentState == 4) return 4;
 				int c = strPart[i]-'a';
 				currentState = stateTable[currentState][c];
@@ -106,26 +106,60 @@ char* getStringPart(char* str, int id){
 		//TODO free
 }
 
+/** For each possible start state, register the output**/
+void registerMap(char* s, int id){
+		for(int i=0; i < MAXSTATES; i++){
+				optimisticMap[id][i] = processPart(s,i);
+		}
+}
+
 int main(int argc, char **argv){
 		if(argc != 2)
 		{
 			printf("Error, there should be one parameter, %d found",argc);
 			return 1;
 		}
-		n = atoi(argv[1]);
+		n = atoi(argv[1])+1; //input is the number of optimistic threads, n is the total number of threads
     initTable();
-		optimisticMap = malloc(n* sizeof(int*));
+		optimisticMap = (int**) malloc(n* sizeof(int*));
 		for(int i=0; i < n; i++){
-			optimisticMap[i] = malloc(MAXSTATES * sizeof(int));
+			optimisticMap[i] =(int *) malloc(MAXSTATES * sizeof(int));
 		}
 
-		char *teststr = "abcdabcabc";
+		char *teststr = buildString();
+		//char *teststr = "aaaaaaaaaaaaaaaaaaaaaaabc";
 
 		printf("String to split: %s\nin %d threads\n",teststr,n);
-		for(int i=0; i<n; i++){
-				char* s = getStringPart(teststr,i);
-				printf("Thread %d: %s\n",i,s);
+		return 0;
+
+		//TODO multithread
+		//for(int i=0; i<n; i++){
+		//		char* s = getStringPart(teststr,i);
+		//		registerMap(s,i);
+		//		printf("Thread %d: %s\n\n",i,s);
+		//}
+		omp_set_dynamic(0);
+		omp_set_num_threads(n);
+#pragma omp parallel
+		{
+				int tn = omp_get_thread_num();
+				char* s = getStringPart(teststr,tn);
+				registerMap(s,tn);
+				printf("Thread %d: %s\n\n",tn,s);
 		}
+		
+		//Here we actually use the optimisticMap
+		int state = 0;
+		for(int i=0; i<n; i++){
+				state = optimisticMap[i][state];	
+		}
+	
+		if(state == 3){
+				printf("%s","Accepted\n");
+		}else{
+				printf("%s","Rejected\n");
+		}
+		
 
 
 		//int finalState = processPart(teststr,0);
@@ -138,6 +172,7 @@ int main(int argc, char **argv){
 		}
 		free(optimisticMap);
 		return 0;
+
 }
 
 

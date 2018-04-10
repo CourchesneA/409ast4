@@ -1,0 +1,50 @@
+Lenght of string: 350 000
+
+
+Using 0 threads:
+Rejected in 13
+Rejected in 14
+Accepted in 13
+Rejected in 13
+Accepted in 13
+Rejected in 13
+Accepted in 13
+Rejected in 13
+Accepted in 14
+Accepted in 14
+
+Using 1 threads:
+Accepted in 5
+Accepted in 5
+Accepted in 4
+Rejected in 4
+Accepted in 4
+Accepted in 5
+Accepted in 4
+Accepted in 5
+Accepted in 4
+Accepted in 5
+
+Using 2 threads:
+Accepted in 3
+Rejected in 3
+Accepted in 2
+Accepted in 3
+Rejected in 2
+Accepted in 2
+Accepted in 3
+Accepted in 2
+Accepted in 3
+Rejected in 2
+
+Using 3 threads:
+Accepted in 1
+Accepted in 2
+Accepted in 1
+Accepted in 1
+Accepted in 1
+Accepted in 2
+Accepted in 2
+Accepted in 2
+Rejected in 2
+Accepted in 2

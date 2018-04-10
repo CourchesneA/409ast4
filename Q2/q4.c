@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 /* Size of the DFA */
 #define MAXSTATES 5
@@ -9,7 +10,7 @@
 #define ALPHABETSIZE 4
 /* Size of the string to match against.  You may need to adjust this. */
 //#define STRINGSIZE 100000000
-#define STRINGSIZE 100
+#define STRINGSIZE 1000000
 
 /* State transition table (ie the DFA) */
 int stateTable[MAXSTATES][ALPHABETSIZE];
@@ -114,6 +115,8 @@ void registerMap(char* s, int id){
 }
 
 int main(int argc, char **argv){
+        clock_t start_t, end_t, total_t;
+
 		if(argc != 2)
 		{
 			printf("Error, there should be one parameter, %d found",argc);
@@ -129,10 +132,11 @@ int main(int argc, char **argv){
 		char *teststr = buildString();
 		//char *teststr = "aaaaaaaaaaaaaaaaaaaaaaabc";
 
-		printf("String to split: %s\nin %d threads\n",teststr,n);
-		return 0;
+        start_t = clock();
 
-		//TODO multithread
+		//printf("String to split: %s\nin %d threads\n",teststr,n);
+
+        //Use this loop for sequential test (without omp)
 		//for(int i=0; i<n; i++){
 		//		char* s = getStringPart(teststr,i);
 		//		registerMap(s,i);
@@ -145,7 +149,7 @@ int main(int argc, char **argv){
 				int tn = omp_get_thread_num();
 				char* s = getStringPart(teststr,tn);
 				registerMap(s,tn);
-				printf("Thread %d: %s\n\n",tn,s);
+				//printf("Thread %d: %s\n\n",tn,s);
 		}
 		
 		//Here we actually use the optimisticMap
@@ -153,14 +157,17 @@ int main(int argc, char **argv){
 		for(int i=0; i<n; i++){
 				state = optimisticMap[i][state];	
 		}
-	
-		if(state == 3){
-				printf("%s","Accepted\n");
-		}else{
-				printf("%s","Rejected\n");
-		}
-		
 
+        end_t = clock();
+	
+        total_t = (double) (end_t - start_t)/CLOCKS_PER_SEC;
+        
+		if(state == 3){
+				printf("%s","Accepted ");
+		}else{
+				printf("%s","Rejected ");
+		}
+	    printf("in %ld\n",total_t);	
 
 		//int finalState = processPart(teststr,0);
 		//printf("The final state is %d",finalState);
